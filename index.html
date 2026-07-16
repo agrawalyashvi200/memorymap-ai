@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoryMap AI — Find anything, instantly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Caveat:wght@500;700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="pin-dot"></span>MemoryMap AI</div>
+    <div class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#demo">Try it</a>
+      <a href="#board">Your items</a>
+      <a href="#" id="settingsLink">API key</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">A memory for your things</span>
+      <h1>You didn't forget where you put it.<br>You just never wrote it down.</h1>
+      <p class="lead">Snap a photo the moment you put something away. MemoryMap AI reads the picture, remembers the room and what's nearby, and finds it again the instant you ask.</p>
+      <a href="#demo" class="btn">Try the live demo →</a>
+    </div>
+    <div class="stack" aria-hidden="true">
+      <svg class="string-svg" viewBox="0 0 340 320"><path d="M 95 60 C 160 20, 220 40, 260 90" stroke="#C1443C" stroke-width="2" fill="none" stroke-dasharray="1 7" stroke-linecap="round"/></svg>
+      <div class="pcard c1"><div class="thumb"></div><div class="cap">PASSPORT · STUDY</div></div>
+      <div class="pcard c2"><div class="thumb" style="background:linear-gradient(135deg,#c9b896,#a68e63)"></div><div class="cap">KEYS · HALLWAY</div></div>
+      <div class="pcard c3"><div class="thumb" style="background:linear-gradient(135deg,#e0d3ae,#c2a876)"></div><div class="cap">CHARGER · DESK</div></div>
+    </div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow2">The process</span>
+      <h2>Three steps, in this order</h2>
+      <p>Each step only works because of the one before it — that's why it's numbered.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="num">01 — SNAP</div><h3>Photograph it once</h3><p>Take a picture the moment you put an item down — straight from your phone camera. The AI looks at the frame: the item, the shelf, the objects around it.</p></div>
+      <div class="step"><div class="num">02 — STORE</div><h3>AI writes the memory</h3><p>It generates a short description of the item and its surroundings, tags the room, and timestamps it. No manual notes needed.</p></div>
+      <div class="step"><div class="num">03 — SEARCH</div><h3>Ask, in plain words</h3><p>Type "where's my passport?" and it matches your question against every memory to find the most recent, most likely spot.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="demo" class="demo">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow2">Live demo</span>
+      <h2>Add something, then ask for it back</h2>
+      <p id="keyNotice">This runs on a real AI model. <a href="#" id="openSettingsFromNotice">Add your Anthropic API key</a> to switch it on.</p>
+    </div>
+    <div class="demo-grid">
+      <div class="panel">
+        <h3>Store an item</h3>
+        <div class="sub">Tap to open your camera, or choose a photo from your gallery.</div>
+        <label for="fileInput">Photo</label>
+        <div class="drop" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*" capture="environment">
+          <span id="dropLabel">Tap to take or choose a photo</span>
+        </div>
+        <div class="preview" id="previewRow" style="display:none;">
+          <img id="previewImg" alt="">
+          <span id="previewName"></span>
+        </div>
+        <label for="roomSelect">Room</label>
+        <select id="roomSelect">
+          <option>Bedroom</option><option>Study</option><option>Living room</option>
+          <option>Kitchen</option><option>Hallway</option><option>Storeroom</option><option>Other</option>
+        </select>
+        <label for="noteInput">Note (optional)</label>
+        <textarea id="noteInput" placeholder="e.g. inside the blue backpack"></textarea>
+        <a class="btn dark" id="saveBtn">Remember this →</a>
+        <div class="status" id="saveStatus"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Find something</h3>
+        <div class="sub">Ask in your own words.</div>
+        <div class="search-row">
+          <input type="text" id="searchInput" placeholder="Where is my passport?">
+          <a class="btn" id="searchBtn">Find →</a>
+        </div>
+        <div class="status" id="searchStatus"></div>
+        <div class="result" id="resultBox"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="board">
+  <div class="wrap">
+    <div class="board-head">
+      <div class="section-head">
+        <span class="eyebrow2">The corkboard</span>
+        <h2>Everything remembered so far</h2>
+      </div>
+      <a class="btn ghost" id="clearBtn">Clear board</a>
+    </div>
+    <div class="items-grid" id="itemsGrid"></div>
+    <div class="empty-note" id="emptyNote">— the board is empty. Store your first item above —</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="hand">"Last seen near the blue file, second shelf."</p>
+    <p>MemoryMap AI — a national-level science exhibition project.</p>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Connect your Anthropic API key</h3>
+    <p class="modal-copy">MemoryMap AI calls Claude directly from your browser to read photos and answer searches. Get a free key at
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> and paste it below.
+      It's stored only on this device (in your browser's local storage) and is never sent anywhere except Anthropic's API.</p>
+    <input type="text" id="apiKeyInput" placeholder="sk-ant-...">
+    <div class="modal-actions">
+      <a class="btn ghost" id="closeModal">Cancel</a>
+      <a class="btn dark" id="saveKey">Save key</a>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
