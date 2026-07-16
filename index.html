@@ -17,7 +17,6 @@
       <a href="#how">How it works</a>
       <a href="#demo">Try it</a>
       <a href="#board">Your items</a>
-      <a href="#" id="settingsLink">API key</a>
     </div>
   </div>
 </nav>
@@ -59,7 +58,6 @@
     <div class="section-head">
       <span class="eyebrow2">Live demo</span>
       <h2>Add something, then ask for it back</h2>
-      <p id="keyNotice">This runs on a real AI model. <a href="#" id="openSettingsFromNotice">Add your Anthropic API key</a> to switch it on.</p>
     </div>
     <div class="demo-grid">
       <div class="panel">
@@ -120,20 +118,6 @@
   </div>
 </footer>
 
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h3>Connect your Groq API key (Optional)</h3>
-    <p class="modal-copy">If left blank, MemoryMap AI will use the built-in server key. Optionally, you can paste your own Groq API key below. Get a free key at
-      <a href="https://console.groq.com/" target="_blank" rel="noopener">console.groq.com</a>.
-      It's stored only on this device (in your browser's local storage) and is never shared.</p>
-    <input type="text" id="apiKeyInput" placeholder="gsk_...">
-    <div class="modal-actions">
-      <a class="btn ghost" id="closeModal">Cancel</a>
-      <a class="btn dark" id="saveKey">Save key</a>
-    </div>
-  </div>
-</div>
-
-<script src="script.js?v=8"></script>
+<script src="script.js?v=9"></script>
 </body>
 </html>

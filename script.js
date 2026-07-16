@@ -6,36 +6,7 @@ let pendingPhoto = null;
 const $ = id => document.getElementById(id);
 
 /* ---------- API key handling ---------- */
-function getApiKey(){ return localStorage.getItem(API_KEY_STORAGE) || ''; }
-
-function refreshKeyNotice(){
-  const notice = $('keyNotice');
-  if(getApiKey()){
-    notice.innerHTML = 'Running on Personal Groq Key. <a href="#" id="openSettingsFromNotice2">Change or remove key</a>';
-    document.getElementById('openSettingsFromNotice2').addEventListener('click', e => { e.preventDefault(); openModal(); });
-  } else {
-    notice.innerHTML = 'Running on Server Groq Key. <a href="#" id="openSettingsFromNotice2">Use your own key instead</a>';
-    document.getElementById('openSettingsFromNotice2').addEventListener('click', e => { e.preventDefault(); openModal(); });
-  }
-}
-
-function openModal(){
-  $('apiKeyInput').value = getApiKey();
-  $('modalOverlay').classList.add('open');
-}
-function closeModal(){ $('modalOverlay').classList.remove('open'); }
-
-$('settingsLink').addEventListener('click', e => { e.preventDefault(); openModal(); });
-$('openSettingsFromNotice').addEventListener('click', e => { e.preventDefault(); openModal(); });
-$('closeModal').addEventListener('click', closeModal);
-$('modalOverlay').addEventListener('click', e => { if(e.target.id === 'modalOverlay') closeModal(); });
-$('saveKey').addEventListener('click', () => {
-  const val = $('apiKeyInput').value.trim();
-  if(val) localStorage.setItem(API_KEY_STORAGE, val);
-  else localStorage.removeItem(API_KEY_STORAGE);
-  refreshKeyNotice();
-  closeModal();
-});
+function getApiKey(){ return ''; }
 
 /* ---------- image handling ---------- */
 function compressImage(file){
@@ -281,4 +252,3 @@ $('clearBtn').addEventListener('click', () => {
 });
 
 loadItems();
-refreshKeyNotice();
