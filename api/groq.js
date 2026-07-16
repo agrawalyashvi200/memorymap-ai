@@ -19,7 +19,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: model || 'llama-3.2-11b-vision-preview',
+        model: model || 'meta-llama/llama-4-scout-17b-16e-instruct',
         messages,
         response_format
       })
