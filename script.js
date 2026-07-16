@@ -11,10 +11,10 @@ function getApiKey(){ return localStorage.getItem(API_KEY_STORAGE) || ''; }
 function refreshKeyNotice(){
   const notice = $('keyNotice');
   if(getApiKey()){
-    notice.innerHTML = 'Connected to Claude. <a href="#" id="openSettingsFromNotice2">Change key</a>';
+    notice.innerHTML = 'Running on Personal Key. <a href="#" id="openSettingsFromNotice2">Change or remove key</a>';
     document.getElementById('openSettingsFromNotice2').addEventListener('click', e => { e.preventDefault(); openModal(); });
   } else {
-    notice.innerHTML = 'This runs on a real AI model. <a href="#" id="openSettingsFromNotice2">Add your Anthropic API key</a> to switch it on.';
+    notice.innerHTML = 'Running on Server Key. <a href="#" id="openSettingsFromNotice2">Use your own key instead</a>';
     document.getElementById('openSettingsFromNotice2').addEventListener('click', e => { e.preventDefault(); openModal(); });
   }
 }
@@ -107,17 +107,25 @@ $('fileInput').addEventListener('change', async e => {
 /* ---------- Claude API calls ---------- */
 async function callClaude(messages){
   const apiKey = getApiKey();
-  if(!apiKey) throw new Error('missing_key');
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  let url = 'https://api.anthropic.com/v1/messages';
+  let headers = {
+    'Content-Type': 'application/json'
+  };
+
+  if (apiKey) {
+    headers['x-api-key'] = apiKey;
+    headers['anthropic-version'] = '2023-06-01';
+    headers['anthropic-dangerous-direct-browser-access'] = 'true';
+  } else {
+    url = '/api/claude';
+  }
+
+  const response = await fetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
+    headers: headers,
     body: JSON.stringify({ model: 'claude-3-5-sonnet-20241022', max_tokens: 1000, messages })
   });
+
   if(!response.ok){
     const errBody = await response.text();
     throw new Error('api_error: ' + errBody);
@@ -130,7 +138,6 @@ async function callClaude(messages){
 /* ---------- save item ---------- */
 $('saveBtn').addEventListener('click', async () => {
   const statusEl = $('saveStatus');
-  if(!getApiKey()){ setStatus(statusEl, 'Add your API key first (top right).', 'err'); openModal(); return; }
   if(!pendingPhoto){ setStatus(statusEl, 'Choose a photo first.', 'err'); return; }
   setStatus(statusEl, 'AI is looking at the photo…', 'busy');
   const room = $('roomSelect').value;
@@ -190,7 +197,6 @@ async function runSearch(){
   const resultBox = $('resultBox');
   const query = $('searchInput').value.trim();
   resultBox.innerHTML = '';
-  if(!getApiKey()){ setStatus(statusEl, 'Add your API key first (top right).', 'err'); openModal(); return; }
   if(!query){ setStatus(statusEl, "Type what you're looking for.", 'err'); return; }
   if(items.length === 0){ setStatus(statusEl, 'Nothing stored yet — add an item first.', 'err'); return; }
   setStatus(statusEl, 'Searching memories…', 'busy');

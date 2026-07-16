@@ -122,10 +122,10 @@
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <h3>Connect your Anthropic API key</h3>
-    <p class="modal-copy">MemoryMap AI calls Claude directly from your browser to read photos and answer searches. Get a free key at
-      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> and paste it below.
-      It's stored only on this device (in your browser's local storage) and is never sent anywhere except Anthropic's API.</p>
+    <h3>Connect your Anthropic API key (Optional)</h3>
+    <p class="modal-copy">If left blank, MemoryMap AI will use the built-in server key. Optionally, you can paste your own Anthropic API key below. Get a free key at
+      <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.
+      It's stored only on this device (in your browser's local storage) and is never shared.</p>
     <input type="text" id="apiKeyInput" placeholder="sk-ant-...">
     <div class="modal-actions">
       <a class="btn ghost" id="closeModal">Cancel</a>
@@ -134,6 +134,6 @@
   </div>
 </div>
 
-<script src="script.js?v=2"></script>
+<script src="script.js?v=3"></script>
 </body>
 </html>
