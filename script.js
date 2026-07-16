@@ -163,8 +163,21 @@ $('saveBtn').addEventListener('click', async () => {
     $('fileInput').value = '';
   }catch(err){
     console.error('Save error:', err);
-    if(err.message === 'missing_key') setStatus(statusEl, 'Add your API key first (top right).', 'err');
-    else setStatus(statusEl, 'Something went wrong reading that photo. Try again.', 'err');
+    if(err.message === 'missing_key') {
+      setStatus(statusEl, 'Add your API key first (top right).', 'err');
+    } else if (err.message.startsWith('api_error:')) {
+      let displayMsg = 'API Error: ';
+      try {
+        const rawJson = err.message.replace('api_error:', '').trim();
+        const parsed = JSON.parse(rawJson);
+        displayMsg += parsed.error?.message || rawJson;
+      } catch(e) {
+        displayMsg += err.message;
+      }
+      setStatus(statusEl, displayMsg, 'err');
+    } else {
+      setStatus(statusEl, 'Error: ' + err.message, 'err');
+    }
   }
 });
 
@@ -205,8 +218,21 @@ async function runSearch(){
     resultBox.innerHTML = `<div class="result-card"><div><p class="result-msg">${parsed.message || "Couldn't find a confident match."}</p></div></div>`;
   }catch(err){
     console.error('Search error:', err);
-    if(err.message === 'missing_key') setStatus(statusEl, 'Add your API key first (top right).', 'err');
-    else setStatus(statusEl, 'Search failed — try rephrasing, or check your API key.', 'err');
+    if(err.message === 'missing_key') {
+      setStatus(statusEl, 'Add your API key first (top right).', 'err');
+    } else if (err.message.startsWith('api_error:')) {
+      let displayMsg = 'API Error: ';
+      try {
+        const rawJson = err.message.replace('api_error:', '').trim();
+        const parsed = JSON.parse(rawJson);
+        displayMsg += parsed.error?.message || rawJson;
+      } catch(e) {
+        displayMsg += err.message;
+      }
+      setStatus(statusEl, displayMsg, 'err');
+    } else {
+      setStatus(statusEl, 'Search failed: ' + err.message, 'err');
+    }
   }
 }
 
