@@ -4,20 +4,25 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'Gemini API key is not configured on the server. Please add GEMINI_API_KEY in Vercel settings.' });
+    return res.status(500).json({ error: 'Groq API key is not configured on the server. Please add GROQ_API_KEY in Vercel settings.' });
   }
 
   try {
-    const { contents, generationConfig } = req.body;
+    const { messages, model, response_format } = req.body;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({ contents, generationConfig })
+      body: JSON.stringify({
+        model: model || 'llama-3.2-11b-vision-preview',
+        messages,
+        response_format
+      })
     });
 
     if (!response.ok) {

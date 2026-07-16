@@ -1,5 +1,5 @@
 const ITEMS_KEY = 'memorymap_items';
-const API_KEY_STORAGE = 'memorymap_gemini_key';
+const API_KEY_STORAGE = 'memorymap_groq_key';
 let items = [];
 let pendingPhoto = null;
 
@@ -11,10 +11,10 @@ function getApiKey(){ return localStorage.getItem(API_KEY_STORAGE) || ''; }
 function refreshKeyNotice(){
   const notice = $('keyNotice');
   if(getApiKey()){
-    notice.innerHTML = 'Running on Personal Gemini Key. <a href="#" id="openSettingsFromNotice2">Change or remove key</a>';
+    notice.innerHTML = 'Running on Personal Groq Key. <a href="#" id="openSettingsFromNotice2">Change or remove key</a>';
     document.getElementById('openSettingsFromNotice2').addEventListener('click', e => { e.preventDefault(); openModal(); });
   } else {
-    notice.innerHTML = 'Running on Server Gemini Key. <a href="#" id="openSettingsFromNotice2">Use your own key instead</a>';
+    notice.innerHTML = 'Running on Server Groq Key. <a href="#" id="openSettingsFromNotice2">Use your own key instead</a>';
     document.getElementById('openSettingsFromNotice2').addEventListener('click', e => { e.preventDefault(); openModal(); });
   }
 }
@@ -104,31 +104,34 @@ $('fileInput').addEventListener('change', async e => {
   $('dropLabel').textContent = 'Photo selected — tap to replace it';
 });
 
-/* ---------- Gemini API calls ---------- */
-async function callGemini(contents, generationConfig = null){
+/* ---------- Groq API calls ---------- */
+async function callGroq(messages, model = 'llama-3.2-11b-vision-preview', responseFormat = null){
   const apiKey = getApiKey();
   let url = '';
-  let response;
+  let headers = {
+    'Content-Type': 'application/json'
+  };
 
   if (apiKey) {
-    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ contents, generationConfig })
-    });
+    url = 'https://api.groq.com/openai/v1/chat/completions';
+    headers['Authorization'] = `Bearer ${apiKey}`;
   } else {
-    url = '/api/gemini';
-    response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ contents, generationConfig })
-    });
+    url = '/api/groq';
   }
+
+  const bodyObj = {
+    model,
+    messages
+  };
+  if (responseFormat) {
+    bodyObj.response_format = responseFormat;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(bodyObj)
+  });
 
   if(!response.ok){
     const errBody = await response.text();
@@ -136,10 +139,10 @@ async function callGemini(contents, generationConfig = null){
   }
   const data = await response.json();
   try {
-    const text = data.candidates[0].content.parts[0].text;
+    const text = data.choices[0].message.content;
     return text || '';
   } catch (e) {
-    throw new Error('invalid_response: Failed to parse Gemini response payload.');
+    throw new Error('invalid_response: Failed to parse Groq response payload.');
   }
 }
 
@@ -154,21 +157,25 @@ $('saveBtn').addEventListener('click', async () => {
     const mimeType = pendingPhoto.substring(pendingPhoto.indexOf(':')+1, pendingPhoto.indexOf(';'));
     const base64 = pendingPhoto.split(',')[1];
     
-    const contents = [
+    const messages = [
       {
-        parts: [
-          { text: `Look at this photo of an item being stored in a ${room}. In one short sentence (under 20 words), describe the item and exactly where it sits relative to nearby objects (e.g. "on the second shelf next to a blue folder"). Only output that one sentence, nothing else.` },
+        role: 'user',
+        content: [
           {
-            inlineData: {
-              mimeType: mimeType,
-              data: base64
+            type: 'text',
+            text: `Look at this photo of an item being stored in a ${room}. In one short sentence (under 20 words), describe the item and exactly where it sits relative to nearby objects (e.g. "on the second shelf next to a blue folder"). Only output that one sentence, nothing else.`
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: pendingPhoto
             }
           }
         ]
       }
     ];
 
-    const captionText = await callGemini(contents);
+    const captionText = await callGroq(messages, 'llama-3.2-11b-vision-preview');
     const newItem = {
       id: Date.now().toString(36),
       image: pendingPhoto,
@@ -221,15 +228,11 @@ async function runSearch(){
     const catalogue = items.map(it => ({ id: it.id, room: it.room, note: it.note, caption: it.caption, timestamp: it.timestamp }));
     const prompt = `Here is a list of stored items as JSON: ${JSON.stringify(catalogue)}\n\nUser question: "${query}"\n\nFind the single best-matching item. Respond with ONLY a JSON object, no other text, in this exact shape: {"id": "<matching id or null>", "message": "<one natural, friendly sentence telling the user where it is, in the style of 'Last seen on the second shelf near the blue file.' If nothing matches well, explain nothing matching was found>"}`;
     
-    const contents = [
-      {
-        parts: [
-          { text: prompt }
-        ]
-      }
+    const messages = [
+      { role: 'user', content: prompt }
     ];
 
-    const raw = await callGemini(contents, { responseMimeType: 'application/json' });
+    const raw = await callGroq(messages, 'llama-3.3-70b-versatile', { type: 'json_object' });
     const clean = raw.trim();
     const parsed = JSON.parse(clean);
     setStatus(statusEl, '', '');
