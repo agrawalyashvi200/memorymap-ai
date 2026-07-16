@@ -116,7 +116,7 @@ async function callClaude(messages){
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true'
     },
-    body: JSON.stringify({ model: 'claude-sonnet-5', max_tokens: 1000, messages })
+    body: JSON.stringify({ model: 'claude-3-5-sonnet-20241022', max_tokens: 1000, messages })
   });
   if(!response.ok){
     const errBody = await response.text();
@@ -162,6 +162,7 @@ $('saveBtn').addEventListener('click', async () => {
     $('noteInput').value = '';
     $('fileInput').value = '';
   }catch(err){
+    console.error('Save error:', err);
     if(err.message === 'missing_key') setStatus(statusEl, 'Add your API key first (top right).', 'err');
     else setStatus(statusEl, 'Something went wrong reading that photo. Try again.', 'err');
   }
@@ -203,6 +204,7 @@ async function runSearch(){
     }
     resultBox.innerHTML = `<div class="result-card"><div><p class="result-msg">${parsed.message || "Couldn't find a confident match."}</p></div></div>`;
   }catch(err){
+    console.error('Search error:', err);
     if(err.message === 'missing_key') setStatus(statusEl, 'Add your API key first (top right).', 'err');
     else setStatus(statusEl, 'Search failed — try rephrasing, or check your API key.', 'err');
   }
