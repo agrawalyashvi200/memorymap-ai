@@ -1,5 +1,5 @@
 const ITEMS_KEY = 'memorymap_items';
-const API_KEY_STORAGE = 'memorymap_api_key';
+const API_KEY_STORAGE = 'memorymap_gemini_key';
 let items = [];
 let pendingPhoto = null;
 
@@ -11,10 +11,10 @@ function getApiKey(){ return localStorage.getItem(API_KEY_STORAGE) || ''; }
 function refreshKeyNotice(){
   const notice = $('keyNotice');
   if(getApiKey()){
-    notice.innerHTML = 'Running on Personal Key. <a href="#" id="openSettingsFromNotice2">Change or remove key</a>';
+    notice.innerHTML = 'Running on Personal Gemini Key. <a href="#" id="openSettingsFromNotice2">Change or remove key</a>';
     document.getElementById('openSettingsFromNotice2').addEventListener('click', e => { e.preventDefault(); openModal(); });
   } else {
-    notice.innerHTML = 'Running on Server Key. <a href="#" id="openSettingsFromNotice2">Use your own key instead</a>';
+    notice.innerHTML = 'Running on Server Gemini Key. <a href="#" id="openSettingsFromNotice2">Use your own key instead</a>';
     document.getElementById('openSettingsFromNotice2').addEventListener('click', e => { e.preventDefault(); openModal(); });
   }
 }
@@ -104,35 +104,43 @@ $('fileInput').addEventListener('change', async e => {
   $('dropLabel').textContent = 'Photo selected — tap to replace it';
 });
 
-/* ---------- Claude API calls ---------- */
-async function callClaude(messages){
+/* ---------- Gemini API calls ---------- */
+async function callGemini(contents, generationConfig = null){
   const apiKey = getApiKey();
-  let url = 'https://api.anthropic.com/v1/messages';
-  let headers = {
-    'Content-Type': 'application/json'
-  };
+  let url = '';
+  let response;
 
   if (apiKey) {
-    headers['x-api-key'] = apiKey;
-    headers['anthropic-version'] = '2023-06-01';
-    headers['anthropic-dangerous-direct-browser-access'] = 'true';
+    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ contents, generationConfig })
+    });
   } else {
-    url = '/api/claude';
+    url = '/api/gemini';
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ contents, generationConfig })
+    });
   }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify({ model: 'claude-3-5-sonnet-20241022', max_tokens: 1000, messages })
-  });
 
   if(!response.ok){
     const errBody = await response.text();
     throw new Error('api_error: ' + errBody);
   }
   const data = await response.json();
-  const block = (data.content || []).find(c => c.type === 'text');
-  return block ? block.text : '';
+  try {
+    const text = data.candidates[0].content.parts[0].text;
+    return text || '';
+  } catch (e) {
+    throw new Error('invalid_response: Failed to parse Gemini response payload.');
+  }
 }
 
 /* ---------- save item ---------- */
@@ -145,13 +153,22 @@ $('saveBtn').addEventListener('click', async () => {
   try{
     const mimeType = pendingPhoto.substring(pendingPhoto.indexOf(':')+1, pendingPhoto.indexOf(';'));
     const base64 = pendingPhoto.split(',')[1];
-    const captionText = await callClaude([{
-      role: 'user',
-      content: [
-        { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64 } },
-        { type: 'text', text: `Look at this photo of an item being stored in a ${room}. In one short sentence (under 20 words), describe the item and exactly where it sits relative to nearby objects (e.g. "on the second shelf next to a blue folder"). Only output that one sentence, nothing else.` }
-      ]
-    }]);
+    
+    const contents = [
+      {
+        parts: [
+          { text: `Look at this photo of an item being stored in a ${room}. In one short sentence (under 20 words), describe the item and exactly where it sits relative to nearby objects (e.g. "on the second shelf next to a blue folder"). Only output that one sentence, nothing else.` },
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: base64
+            }
+          }
+        ]
+      }
+    ];
+
+    const captionText = await callGemini(contents);
     const newItem = {
       id: Date.now().toString(36),
       image: pendingPhoto,
@@ -203,8 +220,17 @@ async function runSearch(){
   try{
     const catalogue = items.map(it => ({ id: it.id, room: it.room, note: it.note, caption: it.caption, timestamp: it.timestamp }));
     const prompt = `Here is a list of stored items as JSON: ${JSON.stringify(catalogue)}\n\nUser question: "${query}"\n\nFind the single best-matching item. Respond with ONLY a JSON object, no other text, in this exact shape: {"id": "<matching id or null>", "message": "<one natural, friendly sentence telling the user where it is, in the style of 'Last seen on the second shelf near the blue file.' If nothing matches well, explain nothing matching was found>"}`;
-    const raw = await callClaude([{ role: 'user', content: prompt }]);
-    const clean = raw.replace(/```json|```/g, '').trim();
+    
+    const contents = [
+      {
+        parts: [
+          { text: prompt }
+        ]
+      }
+    ];
+
+    const raw = await callGemini(contents, { responseMimeType: 'application/json' });
+    const clean = raw.trim();
     const parsed = JSON.parse(clean);
     setStatus(statusEl, '', '');
     if(parsed.id){
