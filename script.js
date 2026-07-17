@@ -263,13 +263,28 @@ $('clearBtn').addEventListener('click', () => {
 $('exportBtn').addEventListener('click', () => {
   if (items.length === 0) return;
   try {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `memorymap_backup_${new Date().toISOString().slice(0, 10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    // Create a hidden form to post the JSON content.
+    // This triggers a real browser attachment download, which is required
+    // for mobile devices (especially iOS Safari/Chrome) where client-side data URIs fail.
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/download';
+
+    const dataInput = document.createElement('input');
+    dataInput.type = 'hidden';
+    dataInput.name = 'data';
+    dataInput.value = JSON.stringify(items, null, 2);
+    form.appendChild(dataInput);
+
+    const filenameInput = document.createElement('input');
+    filenameInput.type = 'hidden';
+    filenameInput.name = 'filename';
+    filenameInput.value = `memorymap_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    form.appendChild(filenameInput);
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
   } catch (err) {
     alert("Export failed: " + err.message);
   }
