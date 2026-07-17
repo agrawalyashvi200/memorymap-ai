@@ -27,7 +27,7 @@
       <span class="eyebrow">A memory for your things</span>
       <h1>You didn't forget where you put it.<br>You just never wrote it down.</h1>
       <p class="lead">Snap a photo the moment you put something away. MemoryMap AI reads the picture, remembers the room and what's nearby, and finds it again the instant you ask.</p>
-      <a href="#demo" class="btn">Try the live demo →</a>
+      <a href="#demo" class="btn">Try it now →</a>
     </div>
     <div class="stack" aria-hidden="true">
       <svg class="string-svg" viewBox="0 0 340 320"><path d="M 95 60 C 160 20, 220 40, 260 90" stroke="#C1443C" stroke-width="2" fill="none" stroke-dasharray="1 7" stroke-linecap="round"/></svg>
@@ -56,7 +56,7 @@
 <section id="demo" class="demo">
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow2">Live demo</span>
+      <span class="eyebrow2">Start mapping</span>
       <h2>Add something, then ask for it back</h2>
     </div>
     <div class="demo-grid">
@@ -107,6 +107,11 @@
       </div>
       <div class="settings-actions">
         <button class="btn ghost" id="clearBtn">Clear all saved items</button>
+        <button class="btn dark" id="exportBtn">Export backup (.json)</button>
+        <label for="importFile" class="btn" style="margin: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">
+          Import backup
+          <input type="file" id="importFile" accept=".json" style="display: none;">
+        </label>
       </div>
     </div>
   </div>

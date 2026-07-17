@@ -47,6 +47,7 @@ function persistItems(){ localStorage.setItem(ITEMS_KEY, JSON.stringify(items));
 
 function renderBoard(){
   const clearBtn = $('clearBtn');
+  const exportBtn = $('exportBtn');
   if (clearBtn) {
     if (items.length === 0) {
       clearBtn.classList.add('disabled');
@@ -56,6 +57,15 @@ function renderBoard(){
       clearBtn.classList.remove('disabled');
       clearBtn.removeAttribute('disabled');
       clearBtn.textContent = 'Clear all saved items';
+    }
+  }
+  if (exportBtn) {
+    if (items.length === 0) {
+      exportBtn.classList.add('disabled');
+      exportBtn.setAttribute('disabled', 'true');
+    } else {
+      exportBtn.classList.remove('disabled');
+      exportBtn.removeAttribute('disabled');
     }
   }
 }
@@ -249,4 +259,71 @@ $('clearBtn').addEventListener('click', () => {
   renderBoard();
 });
 
+/* ---------- Export & Import backup ---------- */
+$('exportBtn').addEventListener('click', () => {
+  if (items.length === 0) return;
+  try {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `memorymap_backup_${new Date().toISOString().slice(0, 10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  } catch (err) {
+    alert("Export failed: " + err.message);
+  }
+});
+
+$('importFile').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = event => {
+    try {
+      const importedItems = JSON.parse(event.target.result);
+      if (!Array.isArray(importedItems)) {
+        throw new Error('Backup file must contain an array of items.');
+      }
+      
+      const isValid = importedItems.every(item => item.id && item.image && item.room && item.timestamp);
+      if (!isValid) {
+        throw new Error('Invalid backup file structure.');
+      }
+      
+      if (confirm(`Import ${importedItems.length} items? This will merge them with your current items.`)) {
+        const existingIds = new Set(items.map(it => it.id));
+        importedItems.forEach(item => {
+          if (!existingIds.has(item.id)) {
+            items.push(item);
+          }
+        });
+        persistItems();
+        renderBoard();
+        alert('Backup imported successfully!');
+      }
+    } catch (err) {
+      alert('Error importing backup: ' + err.message);
+    }
+    e.target.value = ''; // reset file input
+  };
+  reader.readAsText(file);
+});
+
+/* ---------- Request Storage Persistence ---------- */
+async function initStoragePersistence() {
+  if (navigator.storage && navigator.storage.persist) {
+    try {
+      const isPersisted = await navigator.storage.persisted();
+      if (!isPersisted) {
+        const granted = await navigator.storage.persist();
+        console.log(`Persistent storage granted: ${granted}`);
+      }
+    } catch (err) {
+      console.warn("Storage persistence request failed:", err);
+    }
+  }
+}
+
+initStoragePersistence();
 loadItems();

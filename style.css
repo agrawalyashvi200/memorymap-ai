@@ -153,6 +153,9 @@ textarea{ resize:vertical; min-height:56px; }
 }
 .settings-actions {
   margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 .btn.disabled, .btn[disabled] {
   opacity: 0.5;
