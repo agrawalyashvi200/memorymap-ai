@@ -52,11 +52,11 @@ function renderBoard(){
     if (items.length === 0) {
       clearBtn.classList.add('disabled');
       clearBtn.setAttribute('disabled', 'true');
-      clearBtn.textContent = 'Memory is empty';
+      clearBtn.textContent = 'No saved items';
     } else {
       clearBtn.classList.remove('disabled');
       clearBtn.removeAttribute('disabled');
-      clearBtn.textContent = 'Clear all saved items';
+      clearBtn.textContent = 'Delete all items';
     }
   }
   if (exportBtn) {
@@ -253,7 +253,7 @@ async function runSearch(){
 /* ---------- clear board ---------- */
 $('clearBtn').addEventListener('click', () => {
   if(items.length === 0) return;
-  if(!confirm('Clear everything stored on this device?')) return;
+  if(!confirm('Delete everything saved on this device? This cannot be undone.')) return;
   items = [];
   persistItems();
   renderBoard();
@@ -291,7 +291,7 @@ $('importFile').addEventListener('change', e => {
         throw new Error('Invalid backup file structure.');
       }
       
-      if (confirm(`Import ${importedItems.length} items? This will merge them with your current items.`)) {
+      if (confirm(`Restore ${importedItems.length} items from your backup file?`)) {
         const existingIds = new Set(items.map(it => it.id));
         importedItems.forEach(item => {
           if (!existingIds.has(item.id)) {
@@ -300,7 +300,7 @@ $('importFile').addEventListener('change', e => {
         });
         persistItems();
         renderBoard();
-        alert('Backup imported successfully!');
+        alert('Items restored successfully!');
       }
     } catch (err) {
       alert('Error importing backup: ' + err.message);
