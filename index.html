@@ -16,7 +16,7 @@
     <div class="navlinks">
       <a href="#how">How it works</a>
       <a href="#demo">Try it</a>
-      <a href="#board">Your items</a>
+      <a href="#settings">Manage Memory</a>
     </div>
   </div>
 </nav>
@@ -97,17 +97,18 @@
   </div>
 </section>
 
-<section id="board">
+<section id="settings" class="settings-section">
   <div class="wrap">
-    <div class="board-head">
+    <div class="settings-card">
       <div class="section-head">
-        <span class="eyebrow2">The corkboard</span>
-        <h2>Everything remembered so far</h2>
+        <span class="eyebrow2">Local Storage</span>
+        <h2>Manage Memory</h2>
+        <p>All stored photos and item details are saved locally in your browser's background cache. They are never sent to any external server (except when searching or processing via the AI API).</p>
       </div>
-      <a class="btn ghost" id="clearBtn">Clear board</a>
+      <div class="settings-actions">
+        <button class="btn ghost" id="clearBtn">Clear all saved items</button>
+      </div>
     </div>
-    <div class="items-grid" id="itemsGrid"></div>
-    <div class="empty-note" id="emptyNote">— the board is empty. Store your first item above —</div>
   </div>
 </section>
 

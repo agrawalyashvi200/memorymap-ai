@@ -46,20 +46,18 @@ function loadItems(){
 function persistItems(){ localStorage.setItem(ITEMS_KEY, JSON.stringify(items)); }
 
 function renderBoard(){
-  const grid = $('itemsGrid');
-  const empty = $('emptyNote');
-  grid.innerHTML = '';
-  if(items.length === 0){ empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  items.slice().reverse().forEach(it => {
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <img src="${it.image}" alt="${(it.caption || 'stored item').slice(0,40)}">
-      <div class="room">${it.room}${it.note ? ' · ' + it.note : ''}</div>
-      <div class="cap">${it.caption || ''}</div>`;
-    grid.appendChild(div);
-  });
+  const clearBtn = $('clearBtn');
+  if (clearBtn) {
+    if (items.length === 0) {
+      clearBtn.classList.add('disabled');
+      clearBtn.setAttribute('disabled', 'true');
+      clearBtn.textContent = 'Memory is empty';
+    } else {
+      clearBtn.classList.remove('disabled');
+      clearBtn.removeAttribute('disabled');
+      clearBtn.textContent = 'Clear all saved items';
+    }
+  }
 }
 
 /* ---------- file input ---------- */
