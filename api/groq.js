@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -12,22 +11,60 @@ export default async function handler(req, res) {
   try {
     const { messages, model, response_format } = req.body;
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: model || 'llama-3.2-11b-vision-preview',
-        messages,
-        response_format
-      })
-    });
+    async function sendGroqReq(modelId) {
+      const payload = { model: modelId, messages };
+      if (response_format) payload.response_format = response_format;
+
+      return await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    const requestedModel = model || 'llama-3.2-11b-vision-preview';
+    let response = await sendGroqReq(requestedModel);
 
     if (!response.ok) {
-      const errBody = await response.text();
-      return res.status(response.status).send(errBody);
+      const errText = await response.text();
+      const isModelError = errText.includes('decommissioned') || errText.includes('does not exist') || response.status === 400 || response.status === 404;
+
+      if (isModelError) {
+        try {
+          const modelsRes = await fetch('https://api.groq.com/openai/v1/models', {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+          });
+          if (modelsRes.ok) {
+            const modelsData = await modelsRes.json();
+            const activeModelIds = (modelsData.data || []).map(m => m.id);
+
+            // Filter candidates that might support vision or image inputs
+            const candidateVisionModels = activeModelIds.filter(id =>
+              id.includes('vision') || id.includes('qwen') || id.includes('llama-4') || id.includes('maverick') || id.includes('scout')
+            );
+
+            for (const candidate of candidateVisionModels) {
+              const candidateRes = await sendGroqReq(candidate);
+              if (candidateRes.ok) {
+                const data = await candidateRes.json();
+                return res.status(200).json(data);
+              }
+            }
+
+            return res.status(400).json({
+              error: {
+                message: `Model '${requestedModel}' is unavailable. Active Groq models: ${activeModelIds.join(', ')}`
+              }
+            });
+          }
+        } catch (fallbackErr) {
+          // Ignore fallback error and return original errText
+        }
+      }
+      return res.status(response.status).send(errText);
     }
 
     const data = await response.json();
