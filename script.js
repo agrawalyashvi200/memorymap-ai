@@ -84,7 +84,7 @@ $('fileInput').addEventListener('change', async e => {
 });
 
 /* ---------- Groq API calls ---------- */
-async function callGroq(messages, model = 'meta-llama/llama-4-scout-17b-16e-instruct', responseFormat = null){
+async function callGroq(messages, model = 'llama-3.2-11b-vision-preview', responseFormat = null){
   const apiKey = getApiKey();
   let url = '';
   let headers = {
@@ -154,7 +154,7 @@ $('saveBtn').addEventListener('click', async () => {
       }
     ];
 
-    const captionText = await callGroq(messages, 'meta-llama/llama-4-scout-17b-16e-instruct');
+    const captionText = await callGroq(messages, 'llama-3.2-11b-vision-preview');
     const newItem = {
       id: Date.now().toString(36),
       image: pendingPhoto,
